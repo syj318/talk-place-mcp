@@ -17,4 +17,5 @@ async def save_place(place_name: str, context: str):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    mcp.run(transport="sse", host="0.0.0.0", port=port)
+    # transport와 port만 지정
+    mcp.run(transport="sse", port=port)
