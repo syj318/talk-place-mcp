@@ -15,9 +15,5 @@ async def save_place(place_name: str, context: str):
     print(f"[저장 로그] 장소: {place_name} | 맥락: {context}")
     return f"✅ '{place_name}'을(를) '{context}' 목적으로 저장했습니다!"
 
-if __name__ == "__main__":
-    import os
-    # Render가 할당한 포트를 가져오고, 없으면 8000 사용
-    port = int(os.environ.get("PORT", 8000))
-    # host를 "0.0.0.0"으로 고정해야 외부망(PlayMCP)에서 접속 가능
-    mcp.run(transport="sse", host="0.0.0.0", port=port)
+# Uvicorn용 ASGI 앱 객체 노출
+app = mcp.get_asgi_app()
