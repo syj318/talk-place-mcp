@@ -1,8 +1,10 @@
 from mcp.server.fastmcp import FastMCP
 import os
 
+# 1. MCP 서버 초기화
 mcp = FastMCP("TalkPlaceBookmark")
 
+# 2. 장소 저장 도구 (Tool) 정의
 @mcp.tool()
 async def save_place(place_name: str, context: str):
     """
@@ -14,7 +16,7 @@ async def save_place(place_name: str, context: str):
     return f"✅ '{place_name}'을(를) 성공적으로 기록했습니다! (메모: {context})"
 
 if __name__ == "__main__":
-    # Render에서 제공하는 포트 번호를 가져옵니다.
+    # Render는 환경 변수 'PORT'를 통해 포트를 할당합니다.
     port = int(os.environ.get("PORT", 8000))
-    # mcp.run() 대신 run_sse_server()를 사용하여 포트와 호스트를 설정합니다.
-    mcp.run_sse_server(host="0.0.0.0", port=port)
+    # transport를 "sse"로 지정하여 배포 환경에 맞게 실행합니다.
+    mcp.run(transport="sse", host="0.0.0.0", port=port)
