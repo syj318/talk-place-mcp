@@ -15,5 +15,5 @@ async def save_place(place_name: str, context: str):
     print(f"[저장 로그] 장소: {place_name} | 맥락: {context}")
     return f"✅ '{place_name}'을(를) '{context}' 목적으로 저장했습니다!"
 
-# Uvicorn용 ASGI 앱 객체 노출
+# Uvicorn이 접근할 수 있도록 ASGI 앱 노출
 app = mcp.get_asgi_app()
