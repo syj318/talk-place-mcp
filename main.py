@@ -1,4 +1,5 @@
 from mcp.server.fastmcp import FastMCP
+import uvicorn
 import os
 
 # 1. MCP 서버 초기화
