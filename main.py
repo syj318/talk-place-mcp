@@ -16,9 +16,8 @@ async def save_place(place_name: str, context: str):
     return f"✅ '{place_name}'을(를) '{context}' 목적으로 저장했습니다!"
 
 if __name__ == "__main__":
-    # Render가 할당한 포트를 가져옵니다.
+    import os
+    # Render가 할당한 포트를 가져오고, 없으면 8000 사용
     port = int(os.environ.get("PORT", 8000))
-    
-    # 3. 최신 FastMCP의 표준 실행 방식 (SSE)
-    # host를 "0.0.0.0"으로 해야 외부에서 접속이 가능합니다.
+    # host를 "0.0.0.0"으로 고정해야 외부망(PlayMCP)에서 접속 가능
     mcp.run(transport="sse", host="0.0.0.0", port=port)
