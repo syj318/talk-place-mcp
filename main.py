@@ -10,15 +10,14 @@ async def save_place(place_name: str, context: str):
     """
     카톡 대화에서 나온 장소와 방문 의도를 저장합니다.
     - place_name: 식당, 카페, 장소의 이름
-    - context: 사용자의 대화 맥락 (예: 부모님과 갈 곳)
+    - context: '부모님과 갈 곳', '친구와 회식' 등 사용자의 대화 맥락
     """
     print(f"[저장 로그] 장소: {place_name} | 맥락: {context}")
     return f"✅ '{place_name}'을(를) '{context}' 목적으로 저장했습니다!"
 
 if __name__ == "__main__":
-    # Render는 PORT 환경 변수를 통해 포트를 할당합니다.
+    # Render는 'PORT' 환경 변수를 통해 포트를 할당합니다.
     port = int(os.environ.get("PORT", 8000))
     
-    # FastMCP.run()의 인자 오류를 피하기 위해 transport만 지정하거나 
-    # 포트 설정을 위해 아래와 같이 실행합니다.
-    mcp.run(transport="sse")
+    # 중요: host를 "0.0.0.0"으로 설정해야 외부에서 접속이 가능합니다.
+    mcp.run(transport="sse", host="0.0.0.0", port=port)
