@@ -15,5 +15,6 @@ async def save_place(place_name: str, context: str):
     print(f"[저장 로그] 장소: {place_name} | 맥락: {context}")
     return f"✅ '{place_name}'을(를) '{context}' 목적으로 저장했습니다!"
 
-# FastMCP 객체 자체가 ASGI 앱입니다
-app = mcp 
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 8000))
+    mcp.run(transport="sse", host="0.0.0.0", port=port)
