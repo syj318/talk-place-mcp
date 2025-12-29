@@ -3,7 +3,9 @@ from mcp.server.fastmcp import FastMCP
 # 1. MCP 서버 초기화
 mcp = FastMCP("TalkPlaceBookmark")
 
-# 2. 장소 저장 도구 (Tool) 정의
+# 2. uvicorn이 인식할 수 있도록 내부 ASGI 앱을 'app'이라는 변수로 명시
+app = mcp.starlette_app
+
 @mcp.tool()
 async def save_place(place_name: str, context: str):
     """
@@ -13,6 +15,3 @@ async def save_place(place_name: str, context: str):
     """
     print(f"[저장 로그] 장소: {place_name} | 맥락: {context}")
     return f"✅ '{place_name}'을(를) '{context}' 목적으로 저장했습니다!"
-
-# 코드 하단에 uvicorn.run()이나 mcp.run()을 모두 지워주세요.
-# Render의 Start Command가 대신 실행해줄 것입니다.
