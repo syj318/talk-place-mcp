@@ -16,21 +16,24 @@ SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis
 
 def get_sheet():
     try:
-        # Render Secret Files의 실제 경로인 /etc/secrets/를 직접 지정합니다.
-        # 만약 로컬 테스트 중이라면 'credentials.json'을 찾습니다.
+        # Render Secret Files의 절대 경로를 직접 사용합니다.
+        # 이 경로로 지정해야 서버가 파일을 확실히 찾을 수 있습니다.
         secret_path = '/etc/secrets/credentials.json'
+        
+        # 만약 로컬(내 컴퓨터)에서 테스트 중이라면 현재 폴더에서 찾습니다.
         if not os.path.exists(secret_path):
             secret_path = 'credentials.json'
             
-        logger.info(f"Using credentials from: {secret_path}")
+        logger.info(f"연결 시도 중인 인증 파일 경로: {secret_path}")
         
         creds = Credentials.from_service_account_file(secret_path, scopes=SCOPE)
         client = gspread.authorize(creds)
         
+        # 구글 시트 ID (주소창에서 복사한 값)
         sheet_id = "1M0VZMN6vEjZY_uh58-04K1W9bB5CgLbn40dx_I_5UBw"
         return client.open_by_key(sheet_id).sheet1
     except Exception as e:
-        logger.error(f"시트 연결 중 오류 발생: {str(e)}")
+        logger.error(f"시트 연결 실패 에러: {str(e)}")
         raise e
 
 @mcp.tool()
