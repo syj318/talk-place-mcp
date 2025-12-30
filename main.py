@@ -56,17 +56,31 @@ async def get_saved_places(keyword: str = ""):
 
 
 if __name__ == "__main__":
+    import uvicorn
     import os
-    # Render가 부여한 포트를 가져옵니다 (기본값 10000).
+    from starlette.responses import JSONResponse
+    from starlette.middleware.cors import CORSMiddleware
+
     port = int(os.environ.get("PORT", 10000))
     
-    logger.info(f"🚀 MCP 서버 가동 시작 (Port: {port})")
-    
-    # 별도의 속성 추출 없이 FastMCP 자체 run 메서드를 사용합니다.
-    # transport="sse"는 웹 서비스(Render) 환경에서 필수 설정입니다.
-    # host="0.0.0.0"은 외부 접속을 허용하기 위해 반드시 필요합니다.
-    mcp.run(
-        transport="sse",
-        host="0.0.0.0",
-        port=port
+    # 1. FastMCP에서 실제 작동하는 ASGI 앱을 꺼냅니다.
+    app = mcp.as_asgi()
+
+    # 2. CORS 및 모든 메서드(POST 포함) 허용 설정
+    # PlayMCP가 정보를 긁어갈 때 발생하는 405 에러를 방지합니다.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
+
+    # 3. 루트(/) 경로 접속 시 200 OK 응답 추가 (PlayMCP 연결 확인용)
+    @app.route("/")
+    async def health_check(request):
+        return JSONResponse({"status": "ok", "mcp_endpoint": "/sse"})
+
+    logger.info(f"🚀 PlayMCP 연동 강화 모드 실행 (Port: {port})")
+    
+    # 4. uvicorn으로 직접 실행하여 포트 10000번에 앱을 고정합니다.
+    uvicorn.run(app, host="0.0.0.0", port=port)
