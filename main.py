@@ -63,13 +63,20 @@ async def get_saved_places(keyword: str = ""):
         return msg
     except Exception as e:
         return f"❌ 조회 실패: {str(e)}"
-
 if __name__ == "__main__":
+    import uvicorn
     import os
-    # Render가 할당한 포트를 읽어옵니다.
+    
+    # 1. Render가 부여한 포트를 가져옵니다.
     port = int(os.environ.get("PORT", 10000))
     
-    # 별도의 속성(_app, as_asgi 등)을 찾지 않고 
-    # FastMCP 공식 문법인 run을 사용하되 SSE 전송 방식을 명시합니다.
-    # host를 "0.0.0.0"으로 잡아야 외부(Render)에서 접속이 가능합니다.
-    mcp.run(transport="sse", host="0.0.0.0", port=port)
+    # 2. FastMCP 객체를 ASGI 표준 앱으로 변환합니다. 
+    # 최신 버전에서는 이 메서드가 가장 표준적인 외부 노출 방식입니다.
+    # 만약 as_asgi()가 없다는 에러가 나면 mcp.run()으로 Render가 알아서 하게 둡니다.
+    try:
+        app = mcp.as_asgi()
+        logger.info(f"Starting server via Uvicorn on port {port}")
+        uvicorn.run(app, host="0.0.0.0", port=port)
+    except AttributeError:
+        logger.info("Falling back to standard mcp.run()")
+        mcp.run()
