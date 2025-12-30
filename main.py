@@ -59,9 +59,7 @@ async def get_saved_places(keyword: str = ""):
         return message
     except Exception as e:
         return f"❌ 조회 실패: {str(e)}"
-
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-# FastMCP의 run()은 내부적으로 uvicorn을 실행하며, 
-# 필요한 설정은 기본적으로 포트만 명시해도 Render 환경에서 잘 작동합니다.
-mcp.run()
+    # Render는 기본적으로 10000번 포트를 사용하므로, 
+    # 설정을 복잡하게 넣지 말고 기본값으로 실행하는 것이 가장 안전합니다.
+    mcp.run()
