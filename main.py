@@ -4,39 +4,32 @@ from google.oauth2.service_account import Credentials
 import os
 from datetime import datetime
 import logging
+import uvicorn
 
-# 로그 설정 (Render 대시보드에서 에러를 확인하기 위함)
+# 로그 설정 최적화
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 mcp = FastMCP("TalkPlaceBookmark")
-
 SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
 
 def get_sheet():
     try:
-        # 1. Render Secret Files의 절대 경로를 직접 지정합니다.
-        # 이 경로가 아니면 Render 서버에서 파일을 찾지 못합니다.
+        # Render Secret Files 경로 확인
         secret_path = '/etc/secrets/credentials.json'
-        
-        # 2. 로컬 테스트 환경을 위한 예외 처리
         if not os.path.exists(secret_path):
             secret_path = 'credentials.json'
             
-        logger.info(f"인증 파일 경로 사용 중: {secret_path}")
-        
-        # 파일이 실제로 있는지 최종 확인
         if not os.path.exists(secret_path):
-            raise FileNotFoundError(f"인증 파일을 찾을 수 없습니다: {secret_path}")
+            logger.error("❌ 인증 파일을 찾을 수 없습니다.")
+            raise FileNotFoundError("credentials.json missing")
 
         creds = Credentials.from_service_account_file(secret_path, scopes=SCOPE)
         client = gspread.authorize(creds)
-        
-        # 사용자님의 시트 ID
         sheet_id = "1M0VZMN6vEjZY_uh58-04K1W9bB5CgLbn40dx_I_5UBw"
         return client.open_by_key(sheet_id).sheet1
     except Exception as e:
-        logger.error(f"시트 연결 실패 에러 상세: {str(e)}")
+        logger.error(f"❌ 시트 연결 실패: {str(e)}")
         raise e
 
 @mcp.tool()
@@ -57,26 +50,21 @@ async def get_saved_places(keyword: str = ""):
         sheet = get_sheet()
         all_records = sheet.get_all_records()
         if not all_records: return "저장된 장소가 없습니다."
-        
-        results = [r for r in all_records if keyword in r['장소명'] or keyword in r['맥락(의도)']] if keyword else all_records[-5:]
-        msg = "📍 저장된 장소 리스트:\n" + "\n".join([f"- {r['장소명']} ({r['맥락(의도)']})" for r in results])
-        return msg
+        results = [r for r in all_records if keyword in r.get('장소명', '') or keyword in r.get('맥락(의도)', '')] if keyword else all_records[-5:]
+        return "📍 장소 리스트:\n" + "\n".join([f"- {r.get('장소명')} ({r.get('맥락(의도)')})" for r in results])
     except Exception as e:
         return f"❌ 조회 실패: {str(e)}"
+
 if __name__ == "__main__":
-    import uvicorn
-    import os
-    
-    # 1. Render가 부여한 포트를 가져옵니다.
+    # Render 환경에 가장 최적화된 실행 방식
     port = int(os.environ.get("PORT", 10000))
+    logger.info(f"🚀 서버 시작 (Port: {port})")
     
-    # 2. FastMCP 객체를 ASGI 표준 앱으로 변환합니다. 
-    # 최신 버전에서는 이 메서드가 가장 표준적인 외부 노출 방식입니다.
-    # 만약 as_asgi()가 없다는 에러가 나면 mcp.run()으로 Render가 알아서 하게 둡니다.
+    # FastMCP의 내부 앱을 직접 uvicorn으로 실행 (포트 바인딩 문제 해결)
+    # .as_asgi()가 실패할 경우를 대비해 직접 내부 객체 접근 시도
     try:
         app = mcp.as_asgi()
-        logger.info(f"Starting server via Uvicorn on port {port}")
-        uvicorn.run(app, host="0.0.0.0", port=port)
-    except AttributeError:
-        logger.info("Falling back to standard mcp.run()")
-        mcp.run()
+    except:
+        app = mcp._app
+        
+    uvicorn.run(app, host="0.0.0.0", port=port)
