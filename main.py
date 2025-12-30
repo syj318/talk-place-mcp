@@ -16,10 +16,15 @@ SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis
 
 def get_sheet():
     try:
-        # 절대 경로를 사용하여 파일 위치를 확실히 지정합니다.
+        # 현재 실행 파일(main.py)이 있는 위치를 기준으로 경로를 잡습니다.
         current_dir = os.path.dirname(os.path.abspath(__file__))
         creds_path = os.path.join(current_dir, 'credentials.json')
         
+        # 파일이 실제로 존재하는지 체크 (로그 확인용)
+        if not os.path.exists(creds_path):
+            logger.error(f"파일을 찾을 수 없습니다: {creds_path}")
+            raise FileNotFoundError(f"credentials.json missing at {creds_path}")
+
         creds = Credentials.from_service_account_file(creds_path, scopes=SCOPE)
         client = gspread.authorize(creds)
         
