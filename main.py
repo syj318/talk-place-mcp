@@ -64,18 +64,12 @@ async def get_saved_places(keyword: str = ""):
     except Exception as e:
         return f"❌ 조회 실패: {str(e)}"
 
-
 if __name__ == "__main__":
-    import uvicorn
     import os
-    
     # Render가 할당한 포트를 읽어옵니다.
     port = int(os.environ.get("PORT", 10000))
     
-    # fastmcp 내부의 Starlette 앱 객체를 직접 가져옵니다.
-    # .as_asgi()나 .webapp 대신 ._app을 사용합니다.
-    app = mcp._app
-    
-    logger.info(f"Starting server on port {port}")
-    # uvicorn으로 서버를 직접 구동하여 Render의 포트 감지 문제를 해결합니다.
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # 별도의 속성(_app, as_asgi 등)을 찾지 않고 
+    # FastMCP 공식 문법인 run을 사용하되 SSE 전송 방식을 명시합니다.
+    # host를 "0.0.0.0"으로 잡아야 외부(Render)에서 접속이 가능합니다.
+    mcp.run(transport="sse", host="0.0.0.0", port=port)
