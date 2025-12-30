@@ -4,7 +4,6 @@ from google.oauth2.service_account import Credentials
 import os
 from datetime import datetime
 import logging
-import uvicorn
 
 # 로그 설정
 logging.basicConfig(level=logging.INFO)
@@ -56,11 +55,10 @@ async def get_saved_places(keyword: str = ""):
         return f"❌ 조회 실패: {str(e)}"
 
 if __name__ == "__main__":
+    import os
+    # Render는 PORT 환경 변수를 제공합니다.
     port = int(os.environ.get("PORT", 10000))
     logger.info(f"🚀 서버 시작 (Port: {port})")
     
-    # FastMCP 2.x의 올바른 방법: http_app() 또는 sse_app() 사용
-    # HTTP 배포용
-    app = mcp.http_app()
-    
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # transport를 "sse"로 바꿔야 카카오톡(PlayMCP)과 연결됩니다.
+    mcp.run(transport="sse", host="0.0.0.0", port=port)
