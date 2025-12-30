@@ -1,4 +1,5 @@
-fastmcp
+fastapi
+uvicorn
 gspread
 google-auth
-uvicorn
+            
