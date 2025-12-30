@@ -65,9 +65,10 @@ async def get_saved_places(keyword: str = ""):
         return f"❌ 조회 실패: {str(e)}"
 
 if __name__ == "__main__":
-    # Render 환경에서 제공하는 PORT 번호를 읽어옵니다. (없으면 기본값 10000 사용)
     import os
+    # Render가 부여하는 포트 번호를 읽어옵니다.
     port = int(os.environ.get("PORT", 10000))
     
-    # SSE 방식으로 실행하며 포트를 명시적으로 지정합니다.
-    mcp.run(transport="sse", port=port)
+    # SSE 전송 방식을 사용하며, 지정된 포트로 서버를 실행합니다.
+    # 이 설정이 있어야 'No open ports detected' 에러가 사라집니다.
+    mcp.run(transport="sse", host="0.0.0.0", port=port)
