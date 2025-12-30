@@ -63,12 +63,17 @@ async def get_saved_places(keyword: str = ""):
         return msg
     except Exception as e:
         return f"❌ 조회 실패: {str(e)}"
-
 if __name__ == "__main__":
     import uvicorn
     import os
-    # Render가 부여한 포트 번호를 읽어옵니다.
+    
+    # Render가 할당한 포트를 읽어옵니다.
     port = int(os.environ.get("PORT", 10000))
     
-    # FastMCP의 내부 앱을 uvicorn으로 직접 실행하여 'host' 에러를 원천 차단합니다.
-    uvicorn.run(mcp.webapp, host="0.0.0.0", port=port)
+    # FastMCP 객체(mcp)에서 Starlette 앱을 가져오는 올바른 방법입니다.
+    # .webapp 대신 ._app 또는 공식적인 전송 방식을 사용합니다.
+    # 여기서는 가장 안정적인 Starlette 앱 변환 방식을 사용합니다.
+    starlette_app = mcp.as_asgi()
+    
+    logger.info(f"Starting server on port {port}")
+    uvicorn.run(starlette_app, host="0.0.0.0", port=port)
