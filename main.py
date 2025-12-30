@@ -1,4 +1,7 @@
 from fastapi import FastAPI
+
+app = FastAPI()
+
 from pydantic import BaseModel
 import gspread
 from google.oauth2.service_account import Credentials
