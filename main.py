@@ -16,16 +16,14 @@ SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis
 
 def get_sheet():
     try:
-        # 현재 실행 파일(main.py)이 있는 위치를 기준으로 경로를 잡습니다.
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        creds_path = os.path.join(current_dir, 'credentials.json')
+        # Render Secret Files의 표준 경로를 우선 시도합니다.
+        secret_path = '/etc/secrets/credentials.json'
         
-        # 파일이 실제로 존재하는지 체크 (로그 확인용)
-        if not os.path.exists(creds_path):
-            logger.error(f"파일을 찾을 수 없습니다: {creds_path}")
-            raise FileNotFoundError(f"credentials.json missing at {creds_path}")
-
-        creds = Credentials.from_service_account_file(creds_path, scopes=SCOPE)
+        # 만약 해당 경로에 파일이 없다면 현재 디렉토리에서 찾습니다.
+        if not os.path.exists(secret_path):
+            secret_path = 'credentials.json'
+            
+        creds = Credentials.from_service_account_file(secret_path, scopes=SCOPE)
         client = gspread.authorize(creds)
         
         sheet_id = "1M0VZMN6vEjZY_uh58-04K1W9bB5CgLbn40dx_I_5UBw"
