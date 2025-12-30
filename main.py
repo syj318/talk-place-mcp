@@ -62,4 +62,6 @@ async def get_saved_places(keyword: str = ""):
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
-    mcp.run(transport="sse", host="0.0.0.0", port=port)
+# FastMCP의 run()은 내부적으로 uvicorn을 실행하며, 
+# 필요한 설정은 기본적으로 포트만 명시해도 Render 환경에서 잘 작동합니다.
+mcp.run()
