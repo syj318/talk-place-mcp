@@ -1,5 +1,9 @@
-fastapi
-uvicorn
+# fastapi
+# uvicorn
+# gspread
+# google-auth
+            fastmcp
 gspread
 google-auth
-            
+uvicorn
+starlette
