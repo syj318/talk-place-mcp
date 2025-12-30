@@ -16,13 +16,14 @@ SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis
 
 def get_sheet():
     try:
-        # Render Secret Files의 표준 경로를 우선 시도합니다.
+        # Render Secret Files의 실제 경로인 /etc/secrets/를 직접 지정합니다.
+        # 만약 로컬 테스트 중이라면 'credentials.json'을 찾습니다.
         secret_path = '/etc/secrets/credentials.json'
-        
-        # 만약 해당 경로에 파일이 없다면 현재 디렉토리에서 찾습니다.
         if not os.path.exists(secret_path):
             secret_path = 'credentials.json'
             
+        logger.info(f"Using credentials from: {secret_path}")
+        
         creds = Credentials.from_service_account_file(secret_path, scopes=SCOPE)
         client = gspread.authorize(creds)
         
