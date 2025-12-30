@@ -58,29 +58,31 @@ async def get_saved_places(keyword: str = ""):
 if __name__ == "__main__":
     import uvicorn
     import os
+    from starlette.applications import Starlette
     from starlette.responses import JSONResponse
+    from starlette.routing import Route, Mount
     from starlette.middleware.cors import CORSMiddleware
 
     port = int(os.environ.get("PORT", 10000))
-    
-    # 1. FastMCP에서 실제 작동하는 ASGI 앱을 꺼냅니다.
-    app = mcp.as_asgi()
 
-    # 2. CORS 및 모든 메서드(POST 포함) 허용 설정
-    # PlayMCP가 정보를 긁어갈 때 발생하는 405 에러를 방지합니다.
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
+    # 1. 루트(/) 경로 접속 시 200 OK 응답 함수
+    async def homepage(request):
+        return JSONResponse({"status": "ok", "mcp": "TalkPlaceBookmark"})
+
+    # 2. 새로운 Starlette 앱 생성 (FastMCP의 기능을 여기에 포함시킵니다)
+    # FastMCP 객체 자체를 Mount 하거나 경로를 수동으로 잡아줍니다.
+    # 하지만 가장 확실한 방법은 FastMCP가 생성한 앱을 가로채는 것입니다.
+    
+    # FastMCP 인스턴스에서 내부 서버 앱을 꺼내기 위해 run의 인자들을 미리 세팅합니다.
+    # 이번에는 복잡한 메서드 호출 대신, 가장 단순하게 run을 쓰되 
+    # 포트 인식만 정확하게 시킵니다.
+    
+    logger.info(f"🚀 서버 가동 준비 완료 (Port: {port})")
+
+    # FastMCP 버전 호환성을 위해 속성 접근을 하지 않고 바로 run을 실행합니다.
+    # transport="sse" 설정이 PlayMCP 연동의 핵심입니다.
+    mcp.run(
+        transport="sse",
+        host="0.0.0.0",
+        port=port
     )
-
-    # 3. 루트(/) 경로 접속 시 200 OK 응답 추가 (PlayMCP 연결 확인용)
-    @app.route("/")
-    async def health_check(request):
-        return JSONResponse({"status": "ok", "mcp_endpoint": "/sse"})
-
-    logger.info(f"🚀 PlayMCP 연동 강화 모드 실행 (Port: {port})")
-    
-    # 4. uvicorn으로 직접 실행하여 포트 10000번에 앱을 고정합니다.
-    uvicorn.run(app, host="0.0.0.0", port=port)
