@@ -16,12 +16,13 @@ SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis
 
 def get_sheet():
     try:
-        # Render의 Secret Files에 등록한 credentials.json 사용
-        creds = Credentials.from_service_account_file('credentials.json', scopes=SCOPE)
+        # 절대 경로를 사용하여 파일 위치를 확실히 지정합니다.
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        creds_path = os.path.join(current_dir, 'credentials.json')
+        
+        creds = Credentials.from_service_account_file(creds_path, scopes=SCOPE)
         client = gspread.authorize(creds)
         
-        # [중요] 여기에 본인의 실제 구글 시트 ID를 넣으세요!
-        # 예: client.open_by_key("1abc...xyz").sheet1
         sheet_id = "1M0VZMN6vEjZY_uh58-04K1W9bB5CgLbn40dx_I_5UBw"
         return client.open_by_key(sheet_id).sheet1
     except Exception as e:
