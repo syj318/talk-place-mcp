@@ -150,20 +150,16 @@ async def get_saved_places(keyword: str = ""):
     return "📍 장소 리스트:\n" + "\n".join([f"- {r.get('장소명')} ({r.get('맥락(의도)')})" for r in results])
 
 if __name__ == "__main__":
+    import os
+    # Render가 할당해주는 포트(10000)를 가져옵니다.
     port = int(os.environ.get("PORT", 10000))
     
-    # 1. FastMCP의 ASGI 앱을 가져옵니다.
-    app = mcp.as_asgi()
-
-    # 2. CORS 및 모든 메서드(POST 포함)를 허용하는 미들웨어 강제 주입
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-    logger.info(f"🚀 PlayMCP 하이패스 모드 가동 (Port: {port})")
+    logger.info(f"🚀 MCP 서버 가동 시작 (Port: {port})")
     
-    # 3. uvicorn으로 실행
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # 별도의 앱 추출 없이 FastMCP 자체 run 메서드를 사용합니다.
+    # transport="sse" 설정이 PlayMCP와 연결되는 핵심입니다.
+    mcp.run(
+        transport="sse",
+        host="0.0.0.0",
+        port=port
+    )
