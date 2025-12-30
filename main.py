@@ -56,9 +56,27 @@ async def get_saved_places(keyword: str = ""):
 
 if __name__ == "__main__":
     import os
-    # Render는 PORT 환경 변수를 제공합니다.
+    import uvicorn
+    from starlette.responses import JSONResponse
+    from starlette.routing import Route
+
     port = int(os.environ.get("PORT", 10000))
-    logger.info(f"🚀 서버 시작 (Port: {port})")
     
-    # transport를 "sse"로 바꿔야 카카오톡(PlayMCP)과 연결됩니다.
-    mcp.run(transport="sse", host="0.0.0.0", port=port)
+    # FastMCP의 ASGI 앱을 가져옵니다.
+    # 만약 as_asgi()가 없다면 mcp._app을 사용합니다.
+    try:
+        app = mcp.as_asgi()
+    except AttributeError:
+        app = mcp._app
+
+    # PlayMCP가 서버 상태를 확인할 때 사용하는 루트(/) 경로에 대한 응답을 추가합니다.
+    async def homepage(request):
+        return JSONResponse({"status": "ok", "mcp": "TalkPlaceBookmark"})
+
+    # 기존 앱에 루트 경로 응답을 강제로 주입합니다.
+    app.add_route("/", homepage)
+
+    logger.info(f"🚀 PlayMCP 호환 모드로 서버 시작 (Port: {port})")
+    
+    # uvicorn으로 직접 실행하여 모든 경로 컨트롤권을 가집니다.
+    uvicorn.run(app, host="0.0.0.0", port=port)
