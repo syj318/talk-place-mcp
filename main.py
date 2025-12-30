@@ -53,32 +53,13 @@ async def get_saved_places(keyword: str = ""):
         return "📍 장소 리스트:\n" + "\n".join([f"- {r.get('장소명')} ({r.get('맥락(의도)')})" for r in results])
     except Exception as e:
         return f"❌ 조회 실패: {str(e)}"
-
 if __name__ == "__main__":
-    import uvicorn
     import os
-    from starlette.responses import JSONResponse
-    from starlette.middleware.cors import CORSMiddleware
-
+    # Render가 할당한 포트를 가져옵니다.
     port = int(os.environ.get("PORT", 10000))
     
-    # 1. FastMCP에서 실제 ASGI 앱 객체를 꺼냅니다.
-    app = mcp.as_asgi()
-
-    # 2. CORS 설정 추가 (PlayMCP 브라우저에서 직접 요청 시 필요할 수 있음)
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
-
-    # 3. 루트(/) 경로에 접속해도 성공(200 OK)을 응답하도록 설정
-    @app.route("/")
-    async def health_check(request):
-        return JSONResponse({"status": "ok", "mcp_endpoint": "/sse"})
-
-    logger.info(f"🚀 PlayMCP 전용 호환 모드 실행 (Port: {port})")
+    logger.info(f"🚀 서버 시작 (Port: {port})")
     
-    # 4. uvicorn으로 서버 구동
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # 별도의 속성 대신 공식 run 메서드를 사용합니다.
+    # transport="sse"는 웹 서비스 환경(Render)에서 필수입니다.
+    mcp.run(transport="sse", host="0.0.0.0", port=port)
