@@ -1,4 +1,4 @@
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 import gspread
 from google.oauth2.service_account import Credentials
 import os
@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 import uvicorn
 
-# 로그 설정 최적화
+# 로그 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -56,15 +56,11 @@ async def get_saved_places(keyword: str = ""):
         return f"❌ 조회 실패: {str(e)}"
 
 if __name__ == "__main__":
-    # Render 환경에 가장 최적화된 실행 방식
     port = int(os.environ.get("PORT", 10000))
     logger.info(f"🚀 서버 시작 (Port: {port})")
     
-    # FastMCP의 내부 앱을 직접 uvicorn으로 실행 (포트 바인딩 문제 해결)
-    # .as_asgi()가 실패할 경우를 대비해 직접 내부 객체 접근 시도
-    try:
-        app = mcp.as_asgi()
-    except:
-        app = mcp._app
-        
+    # FastMCP 2.x의 올바른 방법: http_app() 또는 sse_app() 사용
+    # HTTP 배포용
+    app = mcp.http_app()
+    
     uvicorn.run(app, host="0.0.0.0", port=port)
