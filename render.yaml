@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: talk-place-mcp
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.4
+
+
+### 방법 2: Procfile 생성
+
+프로젝트 루트에 `Procfile` 파일 생성 (확장자 없음):
+
+web: python main.py

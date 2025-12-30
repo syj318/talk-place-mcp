@@ -65,6 +65,10 @@ async def get_saved_places(keyword: str = ""):
         return f"❌ 조회 실패: {str(e)}"
 
 if __name__ == "__main__":
-    # Render 환경 변수에서 포트를 가져오고 SSE 방식으로 명시적 실행
+    import uvicorn
+    import os
+    # Render가 부여한 포트 번호를 읽어옵니다.
     port = int(os.environ.get("PORT", 10000))
-    mcp.run(transport="sse", host="0.0.0.0", port=port)
+    
+    # FastMCP의 내부 앱을 uvicorn으로 직접 실행하여 'host' 에러를 원천 차단합니다.
+    uvicorn.run(mcp.webapp, host="0.0.0.0", port=port)
