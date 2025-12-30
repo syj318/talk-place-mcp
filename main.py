@@ -65,5 +65,9 @@ async def get_saved_places(keyword: str = ""):
         return f"❌ 조회 실패: {str(e)}"
 
 if __name__ == "__main__":
-    # Render 환경에서 가장 안정적인 실행 방식입니다.
-    mcp.run()
+    # Render 환경에서 제공하는 PORT 번호를 읽어옵니다. (없으면 기본값 10000 사용)
+    import os
+    port = int(os.environ.get("PORT", 10000))
+    
+    # SSE 방식으로 실행하며 포트를 명시적으로 지정합니다.
+    mcp.run(transport="sse", port=port)
