@@ -1,65 +1,37 @@
-from fastapi import FastAPI
+import os
 from fastmcp import FastMCP
-import uvicorn
 
-# =========================
-# 1. MCP 서버 생성 (SSE)
-# =========================
-mcp = FastMCP(
-    name="TalkPlaceBookmark",
-    transport="sse",
-)
+# 1. FastMCP 초기화 (생성자에는 name만 넣습니다)
+mcp = FastMCP("TalkPlaceBookmark")
 
-# =========================
-# 2. MCP Tool 정의
-# =========================
-@mcp.tool()
-def save_place(place_name: str, context: str) -> str:
-    """
-    장소를 북마크로 저장합니다.
-    """
-    return f"📌 '{place_name}' 저장 완료 (상황: {context})"
-
-
-@mcp.tool()
-def list_places() -> list:
-    """
-    저장된 장소 목록을 반환합니다.
-    """
-    return ["부산 카페", "서울 맛집", "제주 여행지"]
-
-
-# =========================
-# 3. FastAPI (PlayMCP용)
-# =========================
-app = FastAPI(title="TalkPlace MCP Bridge")
-
-@app.get("/")
-def health_check():
-    """
-    PlayMCP '정보 불러오기' 통과용
-    """
+# 2. PlayMCP 등록을 위한 상태 확인용 루트 경로 (404 방지)
+@mcp.external_app.get("/")
+async def root():
     return {
-        "status": "ok",
-        "service": "TalkPlaceBookmark MCP",
-        "transport": "SSE",
-        "sse_endpoint": "/sse"
+        "status": "online",
+        "server": "TalkPlaceBookmark",
+        "endpoint": "/sse"
     }
 
+# --- 여기에 기존에 작성하셨던 @mcp.tool 이나 @mcp.resource 코드들을 넣으세요 ---
 
-# =========================
-# 4. MCP 서버 마운트
-# =========================
-# ⚠️ 공식 방식: mcp.server.app
-app.mount("/", mcp.server.app)
+# 예시용 도구 (기존 코드가 있다면 그대로 유지하세요)
+@mcp.tool()
+async def get_bookmark_status():
+    """북마크 서버의 상태를 확인합니다."""
+    return "Server is running perfectly!"
 
+# ------------------------------------------------------------------
 
-# =========================
-# 5. 실행 (Render 호환)
-# =========================
+# 3. 실행부 (Render의 포트 10000번에 맞춰 SSE로 실행)
 if __name__ == "__main__":
-    uvicorn.run(
-        app,
+    # Render는 기본적으로 PORT 환경변수를 10000으로 제공합니다.
+    port = int(os.environ.get("PORT", 10000))
+    
+    # run() 메서드에서 transport를 지정하거나 기본값을 사용합니다.
+    # 포트 설정을 위해 host와 port를 명시합니다.
+    mcp.run(
+        transport="sse",
         host="0.0.0.0",
-        port=10000,
+        port=port
     )
