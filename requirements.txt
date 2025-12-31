@@ -1,7 +1,6 @@
 fastmcp
-fastapi
-uvicorn
 gspread
 google-auth
-google-auth-oauthlib
-                
+uvicorn
+starlette
+fastapi
