@@ -152,31 +152,16 @@ async def get_saved_places(keyword: str = ""):
 
 if __name__ == "__main__":
     import os
-    import uvicorn
-    from starlette.applications import Starlette
-    from starlette.responses import JSONResponse
-    from starlette.routing import Route, Mount
-
+    # Render가 할당하는 포트 번호를 가져옵니다.
     port = int(os.environ.get("PORT", 10000))
     
-    # 1. FastMCP 앱을 가져옵니다.
-    # as_asgi()가 안된다면 내부 _app을 시도합니다.
-    try:
-        mcp_app = mcp.as_asgi()
-    except AttributeError:
-        mcp_app = mcp._app
-
-    # 2. 대문(/) 경로 접속 시 "나 살아있어!"라고 응답하는 기능
-    async def homepage(request):
-        return JSONResponse({"status": "ok", "mcp_endpoint": "/sse"})
-
-    # 3. 루트와 /sse를 모두 처리하는 통합 앱 구성
-    routes = [
-        Route("/", endpoint=homepage),
-        Mount("/", app=mcp_app)
-    ]
+    logger.info(f"🚀 MCP 서버 가동 시작 (Port: {port})")
     
-    app = Starlette(routes=routes)
-
-    logger.info(f"🚀 PlayMCP 하이패스 모드 시작 (Port: {port})")
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # 별도의 앱 추출 없이 공식 run 메서드를 사용합니다.
+    # transport="sse"는 PlayMCP와 같은 외부 클라이언트 연동의 핵심입니다.
+    # host="0.0.0.0"은 Render의 외부 요청을 받기 위해 필수입니다.
+    mcp.run(
+        transport="sse",
+        host="0.0.0.0",
+        port=port
+    )
