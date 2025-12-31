@@ -4,16 +4,12 @@ from google.oauth2.service_account import Credentials
 import os
 from datetime import datetime
 import logging
-import uvicorn
-from starlette.responses import JSONResponse
-from starlette.applications import Starlette
-from starlette.routing import Route, Mount
 
 # 로그 설정
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# MCP 서버 생성
+# 1. MCP 서버 생성
 mcp = FastMCP("TalkPlaceBookmark")
 
 SCOPE = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
@@ -30,41 +26,38 @@ def get_sheet():
 @mcp.tool()
 async def save_place(place_name: str, context: str) -> str:
     """카톡 대화 장소를 구글 시트에 저장합니다."""
-    sheet = get_sheet()
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    sheet.append_row([now, place_name, context])
-    return f"✅ '{place_name}' 저장 완료!"
+    try:
+        sheet = get_sheet()
+        now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        sheet.append_row([now, place_name, context])
+        return f"✅ '{place_name}' 저장 완료!"
+    except Exception as e:
+        return f"❌ 저장 실패: {str(e)}"
 
 @mcp.tool()
 async def get_saved_places(keyword: str = "") -> str:
     """저장된 장소 목록을 불러옵니다."""
-    sheet = get_sheet()
-    rows = sheet.get_all_records()
-    if not rows: return "저장된 장소가 없습니다."
-    results = [r for r in rows if keyword in str(r)] if keyword else rows[-5:]
-    text = "\n".join([f"- {r.get('장소명')} ({r.get('맥락(의도)')})" for r in results])
-    return "📍 장소 리스트:\n" + text
+    try:
+        sheet = get_sheet()
+        rows = sheet.get_all_records()
+        if not rows: return "저장된 장소가 없습니다."
+        results = [r for r in rows if keyword in str(r)] if keyword else rows[-5:]
+        text = "\n".join([f"- {r.get('장소명')} ({r.get('맥락(의도)')})" for r in results])
+        return "📍 장소 리스트:\n" + text
+    except Exception as e:
+        return f"❌ 조회 실패: {str(e)}"
 
-# --- PlayMCP 연동을 위한 서버 실행부 ---
+# --- 이 부분이 PlayMCP 연동의 핵심입니다 ---
 if __name__ == "__main__":
+    import os
     port = int(os.environ.get("PORT", 10000))
     
-    # 1. FastMCP 앱 추출
-    try:
-        mcp_app = mcp.as_asgi()
-    except AttributeError:
-        mcp_app = mcp._app
-
-    # 2. 루트(/) 경로 접속 시 응답 (PlayMCP 연결 확인용)
-    async def homepage(request):
-        return JSONResponse({"status": "ok", "mcp_endpoint": "/sse"})
-
-    # 3. 통합 앱 구성
-    routes = [
-        Route("/", endpoint=homepage),
-        Mount("/", app=mcp_app)
-    ]
-    app = Starlette(routes=routes)
-
-    logger.info(f"🚀 PlayMCP 연동 모드 시작 (Port: {port})")
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    logger.info(f"🚀 MCP 서버 가동 (Port: {port})")
+    
+    # mcp.run은 내부적으로 루트(/) 경로에 대한 404를 반환할 수 있으므로
+    # PlayMCP가 연결 확인을 할 수 있게 SSE 전송 방식을 명확히 설정합니다.
+    mcp.run(
+        transport="sse",
+        host="0.0.0.0",
+        port=port
+    )
